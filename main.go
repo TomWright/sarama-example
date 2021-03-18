@@ -41,12 +41,17 @@ func main() {
 	g.Run(producerRunner)
 
 	go func() {
-		time.Sleep(time.Second * 20)
-
-		for x := 0; x < 5; x++ {
-			produceInput <- &sarama.ProducerMessage{
-				Topic: topic,
-				Value: sarama.StringEncoder(fmt.Sprintf("message-%d", x)),
+		for {
+			select {
+			case <-g.Context().Done():
+				return
+			case <-time.After(time.Second * 20):
+				for x := 0; x < 5; x++ {
+					produceInput <- &sarama.ProducerMessage{
+						Topic: topic,
+						Value: sarama.StringEncoder(fmt.Sprintf("message-%d", x)),
+					}
+				}
 			}
 		}
 	}()
